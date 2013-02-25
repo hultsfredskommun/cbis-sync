@@ -387,7 +387,7 @@ function hk_cbis() {
 			foreach ($rss->Assignments->Assignment as $item)
 			{
 				$return .= "";
-				
+
 			} 
 		}	
 	else 

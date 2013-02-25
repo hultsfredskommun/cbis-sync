@@ -18,16 +18,25 @@ function hk_cbis_options_add_page() {
 function hk_cbis_options_do_page() {
 	?>
 	<div class="wrap">
-		<h1>Settings for CBIS Sync</h1>
+		<h2>Settings for CBIS Sync</h2>
 		<form id="form_hk_options" method="post" action="options.php">
+
+
 			<?php settings_fields('hk_cbis_options_options'); ?>
 			<?php $options = get_option('hk_cbis'); ?>
 
+			<?php submit_button(); ?>
+
+
+			<p><input type="text" name="hk_cbis[test]" value="<?php echo $options['test']; ?>" /></p>
+
+
+			<?php print_r( get_option('hk_cbis') ); ?>
 
 			<h3>Kategorier och menyer</h3>
 			
 			<p><label for="hk_cbis[startpage_cat]">Välj kategori som är startsida.</label><br/>
-							<?php 
+			<?php 
 				$args = array(
 					'orderby'            => 'ID', 
 					'order'              => 'ASC',
@@ -62,15 +71,59 @@ function hk_cbis_options_do_page() {
 
             $example = new CbisExample();
             
-            //Print categories
+            // Print & Save categories
+	        add_action('hk_save_cat', 'hk_save_categories');
             $categories = $example->getCategories();
             echo '<h1>CATEGORIES (' . count($categories) . ')</h1>';
-            print_r($categories);
-            
+	        // function hk_save_categories() {
+	        //     $name 	= $value->Name;
+	        //     $id 	= $value->Id;
+	        //     $event_category = array(
+	        // 	get_cat_ID($id),
+	        // 	get_cat_ID($name));
+	        // 	wp_set_post_categories($post_ID, $event_category);
+	        // }
+	        add_action('hk_save_cat', 'hk_save_categories');
+            foreach ($categories as $value) { ?>
+
+	            	<?php echo $value->Id . " " . $value->Name; ?>
+					<?php 
+					$args = array(
+					'orderby'            => 'ID', 
+					'order'              => 'ASC',
+					'echo'               => 1,
+					'selected'           => esc_attr( $options['cbis_cat_'.$value->Id] ),
+					'hierarchical'       => 1, 
+					'name'               => 'hk_cbis[cbis_cat_'.$value->Id.']',
+					'depth'              => 0,
+					'taxonomy'           => 'category',
+					'show_count'         => true,
+					'hide_empty'         => false,
+					'hide_if_empty'      => false,
+					'show_option_all' => 'Ingen' );  
+					wp_dropdown_categories($args);
+					echo '<br/>' ?>
+				
+			<?php 
+			// $hk_id = count($categories);
+			// echo $hk_id[16467];
+            }
+            // print_r($categories);
+
+
+            // add_filter('edited_terms', 'hk_category_update');
+            // function hk_category_update($term_id) {
+            // 	if($_REQUEST['taxonomy'] == 'category'):
+            // 		$tag_extra_fields = get_option(MY_CATEGORY_FIELDS);
+            // 		$tag_extra_fields[$term_id]['my_title'] = $_REQUEST['submit'];
+            // 		update_option(MY_CATEGORY_FIELDS, $tag_extra_fields);
+            // 	endif;
+            // }
+
             //Get all products
-            $products = $example->getProducts();
-            echo '<h1>PRODUCTS (' . count($products) . ')</h1>';
-            print_r($products);
+            // $products = $example->getProducts();
+            // echo '<h1>PRODUCTS (' . count($products) . ')</h1>';
+            // print_r($products);
             
             //Search products
             $example_options = array('categoryId' => 1234, 'filter' => array('WithOccasionsOnly' => TRUE, 'ExcludeProductsNotInCurrentLanguage' => TRUE));
