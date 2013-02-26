@@ -488,6 +488,8 @@ class CbisClient extends SoapClient {
 
 
 class CbisExample {
+    // Swedish is defined as 1 in CBIS   
+    const CBIS_LANGUAGE_SV = 1;
     // English is defined as 2 in CBIS   
     const CBIS_LANGUAGE_EN = 2;
 
@@ -624,18 +626,16 @@ class CbisExample {
 
         $options = $this->mergeRecursive($defaults, $options);
         $client = $this->client('Products');
-        $result = $client->ListAll($options); // Consider caching this result for better performance
-
+		$result = $client->ListAll($options); // Consider caching this result for better performance
         $products = array();
         if (!empty($result->ListAllResult->Items->Product)) {
             $products = $this->cbis_array($result->ListAllResult->Items->Product);
             foreach ($products as $product) {
                 $product->LanguageId = $options['languageId'];
-                $products[] = $product;
+                $newproducts[] = $product;
             }
         }
-
-        return $products;
+        return $newproducts;
     }
 
 }
