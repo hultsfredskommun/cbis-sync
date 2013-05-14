@@ -43,6 +43,29 @@ function hk_cbis_options_do_page() {
 			
 			<h3>CBIS sync</h3>
 			<p><label for="hk_cbis[hk_cbis_key]">CBIS_API_KEY (i.e. JGFUTHL3N4MSCR7JRAH6PLZR2G3Y2XV1)</label><br/><input size="80" type="text" name="hk_cbis[hk_cbis_key]" value="<?php echo $options['hk_cbis_key']; ?>" /></p>
+			<p><label for="hk_cbis[hk_cbis_author]">F&ouml;rfattare</label> <?php
+			$args = array(
+				'show_option_all'         => null, // string
+				'show_option_none'        => null, // string
+				'hide_if_only_one_author' => null, // string
+				'orderby'                 => 'display_name',
+				'order'                   => 'ASC',
+				'include'                 => null, // string
+				'exclude'                 => null, // string
+				'multi'                   => false,
+				'show'                    => 'display_name',
+				'echo'                    => true,
+				'selected'                => $options['hk_cbis_author'],
+				'include_selected'        => false,
+				'name'                    => "hk_cbis[hk_cbis_author]", // string
+				'id'                      => "hk_cbis[hk_cbis_author]", // integer
+				'class'                   => null, // string 
+				'blog_id'                 => $GLOBALS['blog_id'],
+				'who'                     => null // string
+			);
+			wp_dropdown_users( $args );
+			?>
+			
 			<?php 
 			// CRON
 			if ( $options['hk_cbis_key'] != "" && $options['enable_cron'] == 1 && ! wp_next_scheduled( 'hk_cbis_hook' ) ) {
@@ -274,7 +297,7 @@ function hk_cbis_update_products($returnlog = false) {
 
 		$newpost = array(
 			'comment_status' => 'closed', // 'closed' means no comments.
-			//'post_author'    => <user ID>, //TODO, pick which author to assign post
+			'post_author'    => $options['hk_cbis_author'], // which author to assign post
 			'post_content'   => $cbispost["content"], //The full text of the post.
 			'post_status'    => 'publish', //Set the status of the new post.
 			'post_title'     => $cbispost["name"], //The title of your post.
