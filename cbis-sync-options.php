@@ -219,11 +219,11 @@ function hk_cbis_update_products($returnlog = false) {
 					}
 				}
 				else {
-					foreach ($product->Categories->Category as $cat) {
+					if (!empty($product->Categories->Category) : foreach ($product->Categories->Category as $cat) {
 						if (array_key_exists($cat->Id, $options["cbis_cat"]) && $options["cbis_cat"][$cat->Id] != 0) {
 							$wp_cat[] = $options["cbis_cat"][$cat->Id];
 						}
-					}
+					} endif;
 				}
 			}
 		
