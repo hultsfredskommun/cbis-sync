@@ -200,6 +200,22 @@ function hk_cbis_update_products($returnlog = false) {
 	$product_search = $example->getProducts($product_options);
 	
 	$log .= "Hittade " . count($product_search) . " CBIS produkter, synkar till wordpress \n";
+	// abort if nothing found
+	if (count($product_search) == 0) {
+		$log .= "VARNING. Avslutade synkning utan ändringar " . Date("Y-m-d H:i:s") . "\n";
+
+		$options = get_option('hk_cbis');
+		$options["log"] = $log;
+		$options["update_products"] = 0;
+		update_option('hk_cbis', $options);
+		if ($returnlog) 
+			return $log;
+		else
+			return;
+
+	}
+	
+	// else proceed syncing
 	foreach ($product_search as $product) {
 		$id = $product->Id;
 		// just double check that not already added to wp_posts

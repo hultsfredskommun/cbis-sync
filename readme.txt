@@ -30,5 +30,8 @@ Visit the settings page to setup and enable the sync.
 
 == Changelog ==
 
+= 1.0 =
+Plugin has been tested. Also added fix to abort when 0 products is found.
+
 = 0.9 =
-Some text
+Initial plugin
