@@ -4,11 +4,11 @@ Plugin Name: CBIS Sync
 Plugin URI: http://wordpress.org/extend/plugins/cbis-sync/
 Description: Sync selected information from CBIS database to Wordpress posts.
 Author: Jonas Hjalmarsson, Hultsfreds kommun
-Version: 1.0
+Version: 1.0.4
 Author URI: http://www.hultsfred.se
 */
 
-/*  Copyright 2013 Jonas Hjalmarsson (email: jonas.hjalmarsson@hultsfred.se)
+/*  Copyright 2014 Jonas Hjalmarsson (email: jonas.hjalmarsson@hultsfred.se)
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -26,8 +26,6 @@ Author URI: http://www.hultsfred.se
 */
 
 /*
-TODO
-
 Sync CBIS products to wp posts and also set in which WP-category the posts should be created.
 
 1. i.e. Products in the CBIS-category "Galleri och konst" should be placed as posts in WP-category 
@@ -38,7 +36,7 @@ Sync CBIS products to wp posts and also set in which WP-category the posts shoul
    field cbis_id to the products "Id".
 4. Add button to wipe all posts that are created by CBIS sync, i.e. all posts that have custom_field 
    cbis_id set.
-5. Also sync 
+5. TODO Also sync 
   * attached images
   * GPS-position
   * ExpirationDate
@@ -361,6 +359,18 @@ Array (
 )	
 */
 
+/* check dependencies */
+function hk_dependentplugin_activate()
+{
+	if ( !class_exists( 'SoapClient' ) ) {
+		// deactivate dependent plugin
+		deactivate_plugins( __FILE__);
+		exit('CBIS Sync plugin requires that SoapClient is enabled in PHP!');
+	}
+}
+register_activation_hook( __FILE__, 'hk_dependentplugin_activate' );
+
+/* include options page */
 include( plugin_dir_path( __FILE__ ) . 'cbis-sync-options.php');
 
 /*
@@ -429,7 +439,7 @@ add_action('wp', 'hk_cbis_schedule_activation');
 
 
 
-
+if ( class_exists( 'SoapClient' ) ) {
 /**
  * Helper class that manages the API key for the CBIS API.
  *
@@ -469,22 +479,21 @@ class CbisClient extends SoapClient {
      */
     public function __call($method, $arguments) {
         if (empty($arguments)) {
-            $arguments[] = array('apiKey' => $this->apiKey);
+            $arguments[] = array( 'apiKey' => $this->apiKey );
         } else {
-            $arguments[0] = array_merge(array('apiKey' => $this->apiKey), $arguments[0]);
+            $arguments[0] = array_merge( array( 'apiKey' => $this->apiKey ), $arguments[0]);
         }
-
         $result = NULL;
         try {
-            $result = parent::__call($method, $arguments);
-        } catch (Exception $e) {
+			$result = parent::__call($method, $arguments);
+		} catch (Exception $e) {
             echo $e->getMessage();
         }
         
         return $result;
     }
 }
-
+} // end if SoapClient exists
 
 
 class CbisExample {
@@ -621,6 +630,7 @@ class CbisExample {
                 'SortOrder' => 'None',
                 'RandomSortSeed' => 0,
                 'SubCategoryId' => 0,
+				'IncludePendingPublish' => FALSE
             ),
         );
 

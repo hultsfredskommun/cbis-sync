@@ -1,5 +1,4 @@
 <?php
-
 add_action('admin_init', 'hk_cbis_options_init' );
 add_action('admin_menu', 'hk_cbis_options_add_page');
 
@@ -43,6 +42,7 @@ function hk_cbis_options_do_page() {
 			
 			<h3>CBIS sync</h3>
 			<p><label for="hk_cbis[hk_cbis_key]">CBIS_API_KEY (i.e. JGFUTHL3N4MSCR7JRAH6PLZR2G3Y2XV1)</label><br/><input size="80" type="text" name="hk_cbis[hk_cbis_key]" value="<?php echo $options['hk_cbis_key']; ?>" /></p>
+			<p><label for="hk_cbis[hk_cbis_mapincontent]">How to appended GPS-coordinates if any to content in <a href='http://php.net/manual/en/function.sprintf.php' target='_blank'>string format, sample: [karta punkt='%s,%s']</a> (nothing appended if empty, coordinates is still stored in meta <i>cbis_coord</i>)</label><br/><input size="80" type="text" name="hk_cbis[hk_cbis_mapincontent]" value="<?php echo $options['hk_cbis_mapincontent']; ?>" /></p>
 			<p><label for="hk_cbis[hk_cbis_author]">F&ouml;rfattare</label> <?php
 			$args = array(
 				'show_option_all'         => null, // string
@@ -218,11 +218,12 @@ function hk_cbis_update_products($returnlog = false) {
 	// else proceed syncing
 	foreach ($product_search as $product) {
 		$id = $product->Id;
-		// just double check that not already added to wp_posts
+		// double check that not already added to wp_posts
 		if (!array_key_exists($id, $wp_posts)) {
 			$name = $product->Name;
 			$content = "";
 			$ingress = "";
+			$gps = array();
 			
 			// get category or categories
 			$wp_cat = array();
@@ -246,6 +247,7 @@ function hk_cbis_update_products($returnlog = false) {
 			// get attributes and add to insert array if mapping category is found
 			if (!empty($wp_cat)) {
 				// get attributes
+				$thumbimageurl = $product->Image->Url;
 				
 				foreach ($product->Attributes->AttributeData as $data) {
 					//echo "data(" . $data->AttributeId . "): " . print_r($data->Value,true) . "<br>";
@@ -256,18 +258,29 @@ function hk_cbis_update_products($returnlog = false) {
 						case '102': //content
 							$content = $data->Value->Data;
 							break;
+						case '113': //gps
+							$gps[0] = $data->Value->Data;
+							break;
+						case '114': //gps
+							$gps[1] = $data->Value->Data;
+							break;
 						case '115': //image
+							
 							if (count($data->Value->MediaList->MediaObject) > 1) {
-								$imageurl = $data->Value->MediaList->MediaObject[0]->Url;
-								$imagedescr = $data->Value->MediaList->MediaObject[0]->Description;
+								//$imageurl = $data->Value->MediaList->MediaObject[0]->Url;
+								//$imagedescr = $data->Value->MediaList->MediaObject[0]->Description;
+								$mediaobject = serialize($data->Value->MediaList->MediaObject);
 							}
 							elseif (count($data->Value->MediaList->MediaObject) == 1) {
-								$imageurl = $data->Value->MediaList->MediaObject->Url;
-								$imagedescr = $data->Value->MediaList->MediaObject->Description;
+								//$imageurl = $data->Value->MediaList->MediaObject->Url;
+								//$imagedescr = $data->Value->MediaList->MediaObject->Description;
+								$mediaobject = array();
+								$mediaobject[] = $data->Value->MediaList->MediaObject;
+								$mediaobject = serialize($mediaobject);
 							}
-								
 							break;
 					}
+					
 					//Id
 					//Name
 					//Image
@@ -281,13 +294,19 @@ function hk_cbis_update_products($returnlog = false) {
 					//Contact
 
 				}
-				if ($ingress != "")
+				if ($ingress != "") {
 					$content = "<p class='ingress'>" . $ingress . "</p>" . $content . "";
+				}
+				if (count($gps) == 2 && $options["hk_cbis_mapincontent"] != "") {
+					$content .= "<p class='map'>" . sprintf($options["hk_cbis_mapincontent"], $gps[0], $gps[1]) . "</p>";
+					$coord = $gps[0] . "," . $gps[1];
+				}
 				
-				if ($imageurl != "") 
-					$content = "<img src='$imageurl&width=540&height=315&fitaspect=1' alt='$description'/>" . $content;
-					
-				$wp_posts[$id] = array("name" => $name, "content" => $content, "category" => $wp_cat);
+				
+				
+				
+				
+				$wp_posts[$id] = array("name" => $name, "content" => $content, "category" => $wp_cat, "thumbimageurl" => $thumbimageurl, "mediaobject" => $mediaobject, "coord" => $coord);
 			}
 		}
 		
@@ -338,9 +357,13 @@ function hk_cbis_update_products($returnlog = false) {
 			// set custom fields
 			add_post_meta($wp_id, 'cbis_product_id', $id, true) or update_post_meta($wp_id, 'cbis_product_id', $id);
 			add_post_meta($wp_id, 'cbis_product_unique', $unique, true) or update_post_meta($wp_id, 'cbis_product_unique', $unique);
+			add_post_meta($wp_id, 'cbis_thumbimageurl', $cbispost["thumbimageurl"], true) or update_post_meta($wp_id, 'cbis_thumbimageurl', $cbispost["thumbimageurl"]);
+			add_post_meta($wp_id, 'cbis_mediaobject', $cbispost["mediaobject"], true) or update_post_meta($wp_id, 'cbis_mediaobject', $cbispost["mediaobject"]);
+			add_post_meta($wp_id, 'cbis_coord', $cbispost["coord"], true) or update_post_meta($wp_id, 'cbis_coord', $cbispost["coord"]);
 		}
-		else
+		else {
 			$log .=  "is_error?";
+		}
 		$log .=  "$inserted nya poster och $updated uppdaterade. (id: " . $wp_id . ")\n";
 
 	} // end foreach insert posts
