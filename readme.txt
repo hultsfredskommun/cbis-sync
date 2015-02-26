@@ -33,6 +33,9 @@ Visit the settings page to setup and enable the sync.
 
 == Changelog ==
 
+= 1.0.5 =
+Warning e-mail setting added. Will send a warning when not syncing every 10th time.
+
 = 1.0.4 =
 Bugfix, new filter argument added to work with changes in Citybreak API.
 

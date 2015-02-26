@@ -42,6 +42,7 @@ function hk_cbis_options_do_page() {
 			
 			<h3>CBIS sync</h3>
 			<p><label for="hk_cbis[hk_cbis_key]">CBIS_API_KEY (i.e. JGFUTHL3N4MSCR7JRAH6PLZR2G3Y2XV1)</label><br/><input size="80" type="text" name="hk_cbis[hk_cbis_key]" value="<?php echo $options['hk_cbis_key']; ?>" /></p>
+			<p><label for="hk_cbis[hk_cbis_errormailto]">E-mail error to</label><br/><input size="80" type="text" name="hk_cbis[hk_cbis_errormailto]" value="<?php echo $options['hk_cbis_errormailto']; ?>" /></p>
 			<p><label for="hk_cbis[hk_cbis_mapincontent]">How to appended GPS-coordinates if any to content in <a href='http://php.net/manual/en/function.sprintf.php' target='_blank'>string format, sample: [karta punkt='%s,%s']</a> (nothing appended if empty, coordinates is still stored in meta <i>cbis_coord</i>)</label><br/><input size="80" type="text" name="hk_cbis[hk_cbis_mapincontent]" value="<?php echo $options['hk_cbis_mapincontent']; ?>" /></p>
 			<p><label for="hk_cbis[hk_cbis_author]">F&ouml;rfattare</label> <?php
 			$args = array(
@@ -170,8 +171,9 @@ function hk_cbis_options_do_page() {
 			
 			
 
-
-
+			<?php global $warningcount;  ?>
+			<input size="80" type="hidden" name="hk_cbis[hk_cbis_warningcount]" value="<?php echo ($options['hk_cbis_warningcount'] + $warningcount); ?>" />
+			
 			<?php submit_button(); ?>
 		</form>
 	</div>
@@ -180,7 +182,7 @@ function hk_cbis_options_do_page() {
 
 add_action( 'hk_cbis_hook', 'hk_cbis_update_products' );
 function hk_cbis_update_products($returnlog = false) {
-
+	global $warningcount; 
 	global $wpdb;
 	$options = get_option('hk_cbis');
 	define('CBIS_API_KEY', $options['hk_cbis_key']);
@@ -201,10 +203,21 @@ function hk_cbis_update_products($returnlog = false) {
 	
 	$log .= "Hittade " . count($product_search) . " CBIS produkter, synkar till wordpress \n";
 	// abort if nothing found
+	$product_search = array(); // REMOVE THIS!!!!!!!
+	$warningcount = 0;
 	if (count($product_search) == 0) {
-		$log .= "VARNING. Avslutade synkning utan ändringar " . Date("Y-m-d H:i:s") . "\n";
-
+		$warningcount = 1;
 		$options = get_option('hk_cbis');
+		
+		$log .= "VARNING. Avslutade synkning utan ändringar " . Date("Y-m-d H:i:s") . "\n";
+		$log .= "Varning nummer " . ($options["hk_cbis_warningcount"] + $warningcount) . ".\n";
+		
+		$mail = $options["hk_cbis_errormailto"];
+		if ($mail != "" && (intval($options["hk_cbis_warningcount"]) % 10) == 0) {
+			$message = "Inga artiklar synkades från Citybreak via CBIS-SYNC Wordpress plugin. Detta varningsmeddelande skickas om detta har h&auml;nt fler &auml;n 10 g&aring;nger i rad.";
+			wp_mail($mail, "CBIS-SYNC VARNING - inga artiklar synkades", $message);
+			$log .= "Varning skickad till $mail.\n";
+		}
 		$options["log"] = $log;
 		$options["update_products"] = 0;
 		update_option('hk_cbis', $options);
