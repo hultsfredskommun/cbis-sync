@@ -201,9 +201,9 @@ function hk_cbis_update_products($returnlog = false) {
 	//print_r($product_options);
 	$product_search = $example->getProducts($product_options);
 	
+	//$log .= "DEBUG: " . print_r($product_search, false) . " \n";
 	$log .= "Hittade " . count($product_search) . " CBIS produkter, synkar till wordpress \n";
 	// abort if nothing found
-	$product_search = array(); // REMOVE THIS!!!!!!!
 	$warningcount = 0;
 	if (count($product_search) == 0) {
 		$warningcount = 1;
@@ -234,6 +234,21 @@ function hk_cbis_update_products($returnlog = false) {
 		// double check that not already added to wp_posts
 		if (!array_key_exists($id, $wp_posts)) {
 			$name = $product->Name;
+
+			// get creationdate (publisheddate seems to be last updated, instead using revisiondate if set)
+			$revisiontime = strtotime($product->RevisionDate);
+			$publishedtime = strtotime($product->PublishedDate);
+			if ($revisiontime < $publishedtime && $revisiontime != 0 ) {
+				$publisheddate = $revisiontime;
+			}
+			else {
+				$publisheddate = $publishedtime;
+			}
+			
+			$publisheddate = date("Y-m-d H:i:s", $publisheddate); 
+			$publishedgmdate = gmdate("Y-m-d H:i:s", $publisheddate); 
+			//$log .= $name . ": " . $publisheddate . "\n pub: " . $product->PublishedDate . " - " . $publishedtime . "\n rev: " . $product->RevisionDate . " - ". $revisiontime . "\n";
+			
 			$content = "";
 			$ingress = "";
 			$gps = array();
@@ -300,7 +315,7 @@ function hk_cbis_update_products($returnlog = false) {
 					//Excerpt (101)
 					//Content (102)
 					//Status
-					//PublishDate
+					//PublishedDate
 					//ExpirationDate
 					//Address
 					//GPS (113 & 114)
@@ -312,14 +327,15 @@ function hk_cbis_update_products($returnlog = false) {
 				}
 				if (count($gps) == 2 && $options["hk_cbis_mapincontent"] != "") {
 					$content .= "<p class='map'>" . sprintf($options["hk_cbis_mapincontent"], $gps[0], $gps[1]) . "</p>";
+				}
+				if (count($gps) == 2) {
 					$coord = $gps[0] . "," . $gps[1];
 				}
 				
 				
 				
 				
-				
-				$wp_posts[$id] = array("name" => $name, "content" => $content, "category" => $wp_cat, "thumbimageurl" => $thumbimageurl, "mediaobject" => $mediaobject, "coord" => $coord);
+				$wp_posts[$id] = array("post_date" => $publisheddate, "post_date_gmt" => $publishedgmdate, "name" => $name, "content" => $content, "category" => $wp_cat, "thumbimageurl" => $thumbimageurl, "mediaobject" => $mediaobject, "coord" => $coord);
 			}
 		}
 		
@@ -345,23 +361,34 @@ function hk_cbis_update_products($returnlog = false) {
 
 		$newpost = array(
 			'comment_status' => 'closed', // 'closed' means no comments.
-			'post_author'    => $options['hk_cbis_author'], // which author to assign post
 			'post_content'   => $cbispost["content"], //The full text of the post.
 			'post_status'    => 'publish', //Set the status of the new post.
 			'post_title'     => $cbispost["name"], //The title of your post.
 			'post_type'      => 'post', //You may want to insert a regular post, page, link, a menu item or some custom post type
+			
 		); 
+
 		// if post exist, do update
 		if ($pageposts) {
 			$newpost['ID'] = $pageposts[0]->ID;  //Are you updating an existing post?
+			$newpost['post_author'] = $pageposts[0]->post_author; // which author to assign post
+			$newpost['post_date_gmt'] = $pageposts[0]->post_date_gmt; //set cbis created date
+			$newpost['post_date'] = $pageposts[0]->post_date; //set cbis created date
 			$updated++;
 		}
 		else {
+			$newpost['post_author'] = $options['hk_cbis_author']; // which author to assign post
+			$newpost['post_date_gmt'] = $cbispost["post_date_gmt"]; //set cbis created date
+			$newpost['post_date'] = $cbispost["post_date"]; //set cbis created date
+			
 			$inserted++;
 		}
 
+
 		// insert or update post
 		$wp_id = wp_insert_post($newpost, true);
+
+		$log .= "post_date -" . $cbispost["post_date"] . "-" . $newpost['ID'] . "\n";
 
 		if (!is_wp_error($wp_id)) {				
 			// set categories

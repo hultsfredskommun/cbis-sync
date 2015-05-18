@@ -33,6 +33,9 @@ Visit the settings page to setup and enable the sync.
 
 == Changelog ==
 
+= 1.0.6 =
+Date synced from CBIS PublishedDate and RevisionDate. Author only set and saved first time synced.
+
 = 1.0.5 =
 Warning e-mail setting added. Will send a warning when not syncing every 10th time.
 
