@@ -365,22 +365,18 @@ function hk_cbis_update_products($returnlog = false) {
 			'post_status'    => 'publish', //Set the status of the new post.
 			'post_title'     => $cbispost["name"], //The title of your post.
 			'post_type'      => 'post', //You may want to insert a regular post, page, link, a menu item or some custom post type
-			
+			'post_date_gmt'	 => $cbispost["post_date"], //set cbis created date
+			'post_date'		 => $cbispost["post_date"], //set cbis created date
 		); 
 
 		// if post exist, do update
 		if ($pageposts) {
 			$newpost['ID'] = $pageposts[0]->ID;  //Are you updating an existing post?
-			$newpost['post_author'] = $pageposts[0]->post_author; // which author to assign post
-			$newpost['post_date_gmt'] = $pageposts[0]->post_date_gmt; //set cbis created date
-			$newpost['post_date'] = $pageposts[0]->post_date; //set cbis created date
+			$newpost['post_author'] = $pageposts[0]->post_author; // keep author of post
 			$updated++;
 		}
 		else {
-			$newpost['post_author'] = $options['hk_cbis_author']; // which author to assign post
-			$newpost['post_date_gmt'] = $cbispost["post_date_gmt"]; //set cbis created date
-			$newpost['post_date'] = $cbispost["post_date"]; //set cbis created date
-			
+			$newpost['post_author'] = $options['hk_cbis_author']; // which author to assign post			
 			$inserted++;
 		}
 
@@ -388,7 +384,7 @@ function hk_cbis_update_products($returnlog = false) {
 		// insert or update post
 		$wp_id = wp_insert_post($newpost, true);
 
-		$log .= "post_date -" . $cbispost["post_date"] . "-" . $newpost['ID'] . "\n";
+		$log .= "post_date -" . $newpost["post_date"] . "-" . $newpost['ID'] . "\n";
 
 		if (!is_wp_error($wp_id)) {				
 			// set categories
