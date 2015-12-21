@@ -231,6 +231,7 @@ function hk_cbis_update_products($returnlog = false) {
 	// else proceed syncing
 	foreach ($product_search as $product) {
 		$id = $product->Id;
+		
 		// remove if ExpirationDate has passed
 		if ($product->ExpirationDate != "" && strtotime("now") > strtotime($product->ExpirationDate)) {
 			continue;
@@ -252,12 +253,17 @@ function hk_cbis_update_products($returnlog = false) {
 			$publishedgmdate = gmdate("Y-m-d H:i:s", $publisheddate); 
 			//$log .= $name . ": " . $publisheddate . "\n pub: " . $product->PublishedDate . " - " . $publishedtime . "\n rev: " . $product->RevisionDate . " - ". $revisiontime . "\n";
 			
+			// init values
 			$content = "";
 			$ingress = "";
+			$thumbimageurl = "";
+			$mediaobject = "";
+			$coord = "";
 			$gps = array();
 			
 			// get category or categories
 			$wp_cat = array();
+			$cat = "";
 			if (!empty($product->Categories)) {								
 				//print_r($product->Categories->Category);
 				if (is_object($product->Categories->Category)) {
