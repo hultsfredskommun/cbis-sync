@@ -4,7 +4,7 @@ Plugin Name: CBIS Sync
 Plugin URI: http://wordpress.org/extend/plugins/cbis-sync/
 Description: Sync selected information from CBIS database to Wordpress posts.
 Author: Jonas Hjalmarsson, Hultsfreds kommun
-Version: 1.0.6
+Version: 1.0.7
 Author URI: http://www.hultsfred.se
 */
 
@@ -396,7 +396,7 @@ function hk_cbis() {
 			$count = 0;
 			foreach ($rss->Assignments->Assignment as $item)
 			{
-				$return .= "<br>";
+				//$return .= print_r($item,0)."<br>";
 
 			} 
 		}	
@@ -406,6 +406,7 @@ function hk_cbis() {
 	$options["hk_cbis_log"] = $log;
 
 	update_option("hk_theme", $options);
+	return $return;
 }
 add_action("hk_cbis_event", "hk_cbis");
  

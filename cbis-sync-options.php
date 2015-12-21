@@ -231,10 +231,13 @@ function hk_cbis_update_products($returnlog = false) {
 	// else proceed syncing
 	foreach ($product_search as $product) {
 		$id = $product->Id;
+		// remove if ExpirationDate has passed
+		if ($product->ExpirationDate != "" && strtotime("now") > strtotime($product->ExpirationDate)) {
+			continue;
+		}
 		// double check that not already added to wp_posts
 		if (!array_key_exists($id, $wp_posts)) {
 			$name = $product->Name;
-
 			// get creationdate (publisheddate seems to be last updated, instead using revisiondate if set)
 			$revisiontime = strtotime($product->RevisionDate);
 			$publishedtime = strtotime($product->PublishedDate);

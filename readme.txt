@@ -2,7 +2,7 @@
 Contributors: Jonas Hjalmarsson (Hultsfreds kommun)
 Tags: cbis, Citybreak, rss, sync, cron
 Requires at least: 3.2
-Tested up to: 4.2.2
+Tested up to: 4.4
 Stable tag: trunk
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -32,6 +32,9 @@ Visit the settings page to setup and enable the sync.
 2. Sample of meta values produced of the sync.
 
 == Changelog ==
+
+= 1.0.7 =
+Article not synced if ExpirationDate has passed.
 
 = 1.0.6 =
 Date synced from CBIS PublishedDate and RevisionDate. Author only set and saved first time synced.
